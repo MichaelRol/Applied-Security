@@ -1,11 +1,16 @@
 /* Copyright (C) 2018 Daniel Page <csdsp@bristol.ac.uk>
  *
- * Use of this source code is restricted per the CC BY-NC-ND license, a copy of 
- * which can be found via http://creativecommons.org (and should be included as 
+ * Use of this source code is restricted per the CC BY-NC-ND license, a copy of
+ * which can be found via http://creativecommons.org (and should be included as
  * LICENSE.txt within the associated archive or repository).
  */
 
 #include "encrypt.h"
+
+typedef uint8_t aes_gf28_t;
+
+aes_gf28_t xtime( aes_gf28_t a );
+aes_gf28_t sbox( aes_gf28_t a );
 
 int main( int argc, char* argv[] ) {
   uint8_t k[ 16 ] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
@@ -19,12 +24,28 @@ int main( int argc, char* argv[] ) {
   AES_KEY rk;
 
   AES_set_encrypt_key( k, 128, &rk );
-  AES_encrypt( m, t, &rk );  
+  AES_encrypt( m, t, &rk );
 
   if( !memcmp( t, c, 16 * sizeof( uint8_t ) ) ) {
     printf( "AES.Enc( k, m ) == c\n" );
   }
   else {
     printf( "AES.Enc( k, m ) != c\n" );
+  }
+  aes_gf28_t hi = xtime(0x32);
+}
+
+aes_gf28_t sbox( aes_gf28_t a ) {
+
+  return a;
+}
+
+aes_gf28_t xtime( aes_gf28_t a ) {
+  if (a & 0x80 == 0x80) {
+    printf("%d\n",  0x1B ^ ( a << 1 ));
+    return 0x1B ^ ( a << 1 );
+  } else {
+    printf("%d\n", ( a << 1 ));
+    return (a >> 1);
   }
 }
