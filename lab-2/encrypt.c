@@ -9,6 +9,9 @@
 
 typedef uint8_t aes_gf28_t;
 
+aes_gf28_t aes_gf28_inv(aes_gf28_t a);
+aes_gf28_t aes_gf28_add ( aes_gf28_t a, aes_gf28_t b );
+aes_gf28_t aes_gf28_mul ( aes_gf28_t a, aes_gf28_t b );
 aes_gf28_t xtime( aes_gf28_t a );
 aes_gf28_t sbox( aes_gf28_t a );
 
@@ -22,30 +25,85 @@ int main( int argc, char* argv[] ) {
   uint8_t t[ 16 ];
 
   AES_KEY rk;
-
-  AES_set_encrypt_key( k, 128, &rk );
-  AES_encrypt( m, t, &rk );
-
-  if( !memcmp( t, c, 16 * sizeof( uint8_t ) ) ) {
-    printf( "AES.Enc( k, m ) == c\n" );
+  // AES_set_encrypt_key( k, 128, &rk );
+  // AES_encrypt( m, t, &rk );
+  for (int x = 0; x < 16; x++){
+    t[x] = m[x] ^ k[x];
   }
-  else {
-    printf( "AES.Enc( k, m ) != c\n" );
+  printf("M xor K: ");
+  for (int x = 0; x < 16; x++) {
+    printf("%x, ", t[x]);
   }
-  aes_gf28_t hi = xtime(0x32);
+  printf("\n");
+  for (int x = 0; x < 16; x++){
+    t[x] = sbox(t[x]);
+  }
+  printf("S box: ");
+  for (int x = 0; x < 16; x++) {
+    printf("%x, ", t[x]);
+  }
+  printf("\n");
+  // if( !memcmp( t, c, 16 * sizeof( uint8_t ) ) ) {
+  //   printf( "AES.Enc( k, m ) == c\n" );
+  // }
+  // else {
+  //   printf( "AES.Enc( k, m ) != c\n" );
+  // }
+
+}
+
+aes_gf28_t aes_gf28_add ( aes_gf28_t a, aes_gf28_t b ) {
+  return a ^ b;
+}
+
+aes_gf28_t aes_gf28_mul ( aes_gf28_t a, aes_gf28_t b ) {
+  aes_gf28_t t = 0;
+
+  for (int i = 7; i >= 0; i--) {
+    t = xtime(t);
+
+    if (( b >> i ) & 1) {
+      t ^= a;
+    }
+  }
+
+  return t;
+}
+aes_gf28_t aes_gf28_inv ( aes_gf28_t a ) {
+  aes_gf28_t t_0 = aes_gf28_mul ( a, a ); // a^2
+  aes_gf28_t t_1 = aes_gf28_mul ( t_0 , a ); // a^3
+             t_0 = aes_gf28_mul ( t_0 , t_0 ); // a^4
+             t_1 = aes_gf28_mul ( t_1 , t_0 ); // a^7
+             t_0 = aes_gf28_mul ( t_0 , t_0 ); // a^8
+             t_0 = aes_gf28_mul ( t_1 , t_0 ); // a^15
+             t_0 = aes_gf28_mul ( t_0 , t_0 ); // a^30
+             t_0 = aes_gf28_mul ( t_0 , t_0 ); // a^60
+             t_1 = aes_gf28_mul ( t_1 , t_0 ); // a^67
+             t_0 = aes_gf28_mul ( t_0 , t_1 ); // a^127
+             t_0 = aes_gf28_mul ( t_0 , t_0 ); // a^254
+  return t_0;
 }
 
 aes_gf28_t sbox( aes_gf28_t a ) {
+  a = aes_gf28_inv(a);
+  a = ( 0x63 ) ^ // 0 1 1 0 0 0 1 1
+    ( a ) ^ // a_7 a_6 a_5 a_4 a_3 a_2 a_1 a_0
+    ( a << 1 ) ^ // a_6 a_5 a_4 a_3 a_2 a_1 a_0 0
+    ( a << 2 ) ^ // a_5 a_4 a_3 a_2 a_1 a_0 0 0
+    ( a << 3 ) ^ // a_4 a_3 a_2 a_1 a_0 0 0 0
+    ( a << 4 ) ^ // a_3 a_2 a_1 a_0 0 0 0 0
+    ( a >> 7 ) ^ // 0 0 0 0 0 0 0 a_7
+    ( a >> 6 ) ^ // 0 0 0 0 0 0 a_7 a_6
+    ( a >> 5 ) ^ // 0 0 0 0 0 a_7 a_6 a_5
+    ( a >> 4 ) ; // 0 0 0 0 a_7 a_6 a_5 a_4
 
   return a;
 }
 
 aes_gf28_t xtime( aes_gf28_t a ) {
   if (a & 0x80 == 0x80) {
-    printf("%d\n",  0x1B ^ ( a << 1 ));
-    return 0x1B ^ ( a << 1 );
+    return 0x1B ^ ( a >> 1 );
   } else {
-    printf("%d\n", ( a << 1 ));
     return (a >> 1);
   }
 }
