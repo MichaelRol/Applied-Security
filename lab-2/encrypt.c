@@ -14,7 +14,7 @@ aes_gf28_t aes_gf28_add ( aes_gf28_t a, aes_gf28_t b );
 aes_gf28_t aes_gf28_mul ( aes_gf28_t a, aes_gf28_t b );
 aes_gf28_t xtime( aes_gf28_t a );
 aes_gf28_t sbox( aes_gf28_t a );
-void aes_enc_exp_step( aes_gf28_t* rk, aes_gf28_t rc );
+void aes_enc_keyexp_step ( aes_gf28_t* r, const aes_gf28_t* rk , aes_gf28_t rc );
 void aes_enc_rnd_key( aes_gf28_t* s, aes_gf28_t* rk );
 
 int main( int argc, char* argv[] ) {
@@ -26,12 +26,25 @@ int main( int argc, char* argv[] ) {
                     0xDC, 0x11, 0x85, 0x97, 0x19, 0x6A, 0x0B, 0x32 };
   aes_gf28_t t[ 16 ];
 
-  AES_KEY rk;
+  aes_gf28_t* rkp = k;
 
+  const aes_gf28_t RC[10] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36};
   // AES_set_encrypt_key( k, 128, &rk );
   // AES_encrypt( m, t, &rk );
 
   aes_enc_rnd_key(m, k);
+  for (int i = 1; i <= 10; i++) {
+    aes_enc_keyexp_step ( rkp , rkp , RC[i-1] );
+    for (int x = 0; x < 16; x++) {
+      printf("%x, ", k[x]);
+    }
+    printf("\n");
+  }
+
+
+
+
+
   printf("M xor K: ");
   for (int x = 0; x < 16; x++) {
     printf("%x, ", m[x]);
@@ -61,8 +74,25 @@ void aes_enc_rnd_key( aes_gf28_t* s, aes_gf28_t* rk ) {
   }
 }
 
-void aes_enc_exp_step( aes_gf28_t* rk, aes_gf28_t rc ) {
+void aes_enc_keyexp_step ( aes_gf28_t* r, const aes_gf28_t* rk , aes_gf28_t rc ) {
+  r[ 0 ] = rc ^ sbox ( rk[ 13 ] ) ^ rk[ 0 ];
+  r[ 1 ] = sbox ( rk[ 14 ] ) ^ rk[ 1 ];
+  r[ 2 ] = sbox ( rk[ 15 ] ) ^ rk[ 2 ];
+  r[ 3 ] = sbox ( rk[ 12 ] ) ^ rk[ 3 ];
+  r[ 4 ] = r[ 0 ] ^ rk[ 4 ];
+  r[ 5 ] = r[ 1 ] ^ rk[ 5 ];
+  r[ 6 ] = r[ 2 ] ^ rk[ 6 ];
+  r[ 7 ] = r[ 3 ] ^ rk[ 7 ];
 
+  r[ 8 ] = r[ 4 ] ^ rk[ 8 ];
+  r[ 9 ] = r[ 5 ] ^ rk[ 9 ];
+  r[ 10 ] = r[ 6 ] ^ rk[ 10 ];
+  r[ 11 ] = r[ 7 ] ^ rk[ 11 ];
+
+  r[ 12 ] = r[ 8 ] ^ rk[ 12 ];
+  r[ 13 ] = r[ 9 ] ^ rk[ 13 ];
+  r[ 14 ] = r[ 10 ] ^ rk[ 14 ];
+  r[ 15 ] = r[ 11 ] ^ rk[ 15 ];
 }
 
 aes_gf28_t aes_gf28_add ( aes_gf28_t a, aes_gf28_t b ) {
