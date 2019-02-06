@@ -27,7 +27,7 @@ int main( int argc, char* argv[] ) {
   aes_gf28_t t[ 16 ];
 
   AES_KEY rk;
-  
+
   // AES_set_encrypt_key( k, 128, &rk );
   // AES_encrypt( m, t, &rk );
 
@@ -115,8 +115,8 @@ aes_gf28_t sbox( aes_gf28_t a ) {
 
 aes_gf28_t xtime( aes_gf28_t a ) {
   if ((a & 0x80) == 0x80) {
-    return 0x1B ^ ( a >> 1 );
+    return 0x1B ^ ( a << 1 );
   } else {
-    return (a >> 1);
+    return (a << 1);
   }
 }
