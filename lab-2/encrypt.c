@@ -27,17 +27,23 @@ int main( int argc, char* argv[] ) {
                       0x31, 0x31, 0x98, 0xA2, 0xE0, 0x37, 0x07, 0x34 };
   aes_gf28_t c[ 16 ] = { 0x39, 0x25, 0x84, 0x1D, 0x02, 0xDC, 0x09, 0xFB,
                     0xDC, 0x11, 0x85, 0x97, 0x19, 0x6A, 0x0B, 0x32 };
-  aes_gf28_t t[ 16 ];
+  //aes_gf28_t t[ 16 ];
 
   aes_gf28_t* rkp = k;
+
 
   const aes_gf28_t RC[10] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36};
   // AES_set_encrypt_key( k, 128, &rk );
   // AES_encrypt( m, t, &rk );
 
   aes_enc_rnd_key(m, k);
-  for (int i = 1; i <= 10; i++) {
+  for (int i = 1; i <= 1; i++) {
     aes_enc_rnd_sub( m );
+    for (int x = 0; x < 16; x++) {
+      printf("%x, ", m[x]);
+    }
+    printf("\n");
+    aes_enc_rnd_row( m );
     aes_enc_keyexp_step ( rkp , rkp , RC[i-1] );
     for (int x = 0; x < 16; x++) {
       printf("%x, ", m[x]);
@@ -46,29 +52,37 @@ int main( int argc, char* argv[] ) {
   }
 
 
-
-
-
-  printf("M xor K: ");
-  for (int x = 0; x < 16; x++) {
-    printf("%x, ", m[x]);
-  }
-  printf("\n");
-  for (int x = 0; x < 16; x++){
-    t[x] = sbox(m[x]);
-  }
-  printf("S box: ");
-  for (int x = 0; x < 16; x++) {
-    printf("%x, ", t[x]);
-  }
-  printf("\n");
-
   // if( !memcmp( t, c, 16 * sizeof( uint8_t ) ) ) {
   //   printf( "AES.Enc( k, m ) == c\n" );
   // }
   // else {
   //   printf( "AES.Enc( k, m ) != c\n" );
   // }
+
+}
+
+void aes_enc_rnd_row( aes_gf28_t* m ) {
+
+  aes_gf28_t hold[16];
+  memcpy(hold, m, 16);
+  m[1] = hold[5];
+  m[5] = hold[9];
+  m[9] = hold[13];
+  m[13] = hold[1];
+
+  m[2] = hold[10];
+  m[6] = hold[14];
+  m[10] = hold[2];
+  m[14] = hold[6];
+
+  m[3] = hold[15];
+  m[7] = hold[3];
+  m[11] = hold[7];
+  m[15] = hold[11];
+
+}
+
+void aes_enc_rnd_mix( aes_gf28_t* s ) {
 
 }
 
