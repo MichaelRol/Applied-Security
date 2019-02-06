@@ -16,6 +16,9 @@ aes_gf28_t xtime( aes_gf28_t a );
 aes_gf28_t sbox( aes_gf28_t a );
 void aes_enc_keyexp_step ( aes_gf28_t* r, const aes_gf28_t* rk , aes_gf28_t rc );
 void aes_enc_rnd_key( aes_gf28_t* s, aes_gf28_t* rk );
+void aes_enc_rnd_sub( aes_gf28_t* s );
+void aes_enc_rnd_row( aes_gf28_t* s );
+void aes_enc_rnd_mix( aes_gf28_t* s );
 
 int main( int argc, char* argv[] ) {
   aes_gf28_t k[ 16 ] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
@@ -34,9 +37,10 @@ int main( int argc, char* argv[] ) {
 
   aes_enc_rnd_key(m, k);
   for (int i = 1; i <= 10; i++) {
+    aes_enc_rnd_sub( m );
     aes_enc_keyexp_step ( rkp , rkp , RC[i-1] );
     for (int x = 0; x < 16; x++) {
-      printf("%x, ", k[x]);
+      printf("%x, ", m[x]);
     }
     printf("\n");
   }
@@ -66,6 +70,12 @@ int main( int argc, char* argv[] ) {
   //   printf( "AES.Enc( k, m ) != c\n" );
   // }
 
+}
+
+void aes_enc_rnd_sub( aes_gf28_t* s ) {
+  for (int x = 0; x < 16; x++) {
+    s[x] = sbox(s[x]);
+  }
 }
 
 void aes_enc_rnd_key( aes_gf28_t* s, aes_gf28_t* rk ) {
