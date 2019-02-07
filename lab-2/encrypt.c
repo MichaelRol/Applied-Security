@@ -19,6 +19,7 @@ void aes_enc_rnd_key( aes_gf28_t* s, aes_gf28_t* rk );
 void aes_enc_rnd_sub( aes_gf28_t* s );
 void aes_enc_rnd_row( aes_gf28_t* s );
 void aes_enc_rnd_mix( aes_gf28_t* s );
+void aes_enc(uint8_t* m, uint8_t* k, aes_gf28_t* c );
 
 
 int main( int argc, char* argv[] ) {
@@ -26,41 +27,36 @@ int main( int argc, char* argv[] ) {
                       0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
   aes_gf28_t m[ 16 ] = { 0x32, 0x43, 0xF6, 0xA8, 0x88, 0x5A, 0x30, 0x8D,
                       0x31, 0x31, 0x98, 0xA2, 0xE0, 0x37, 0x07, 0x34 };
-  aes_gf28_t c[ 16 ] = { 0x39, 0x25, 0x84, 0x1D, 0x02, 0xDC, 0x09, 0xFB,
-                    0xDC, 0x11, 0x85, 0x97, 0x19, 0x6A, 0x0B, 0x32 };
-  //aes_gf28_t t[ 16 ];
+  aes_gf28_t c[ 16 ];
 
-  aes_gf28_t* rkp = k;
+  aes_enc(m, k, c);
 
-
-  const aes_gf28_t RC[10] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36};
-  // AES_set_encrypt_key( k, 128, &rk );
-  // AES_encrypt( m, t, &rk );
-
-  aes_enc_rnd_key(m, k);
-  for (int i = 1; i <= 9; i++) {
-    aes_enc_rnd_sub( m );
-    aes_enc_rnd_row( m );
-    aes_enc_rnd_mix(m);
-    aes_enc_keyexp_step ( rkp , rkp , RC[i-1] );
-    aes_enc_rnd_key(m, rkp);
-  }
-  aes_enc_rnd_sub( m );
-  aes_enc_rnd_row( m );
-  aes_enc_keyexp_step ( rkp , rkp , RC[9] );
-  aes_enc_rnd_key(m, rkp);
   for (int x = 0; x < 16; x++) {
-    printf("%x, ", m[x]);
+    printf("%x, ", c[x]);
   }
   printf("\n");
 
-  // if( !memcmp( t, c, 16 * sizeof( uint8_t ) ) ) {
-  //   printf( "AES.Enc( k, m ) == c\n" );
-  // }
-  // else {
-  //   printf( "AES.Enc( k, m ) != c\n" );
-  // }
+}
+void aes_enc( aes_gf28_t* m, aes_gf28_t* k, aes_gf28_t* c ) {
+  
+  aes_gf28_t* rkp = k;
 
+  const aes_gf28_t RC[10] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36};
+  memcpy(c, m, 16);
+  aes_enc_rnd_key(c, k);
+  for (int i = 1; i <= 9; i++) {
+    aes_enc_rnd_sub( c );
+    aes_enc_rnd_row( c );
+    aes_enc_rnd_mix(c);
+    aes_enc_keyexp_step ( rkp , rkp , RC[i-1] );
+    aes_enc_rnd_key(c, rkp);
+  }
+  aes_enc_rnd_sub( c );
+  aes_enc_rnd_row( c );
+  aes_enc_keyexp_step ( rkp , rkp , RC[9] );
+  aes_enc_rnd_key(c, rkp);
+
+  
 }
 
 void aes_enc_rnd_row( aes_gf28_t* m ) {
