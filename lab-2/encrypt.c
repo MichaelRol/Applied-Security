@@ -38,26 +38,21 @@ int main( int argc, char* argv[] ) {
   // AES_encrypt( m, t, &rk );
 
   aes_enc_rnd_key(m, k);
-  for (int i = 1; i <= 1; i++) {
+  for (int i = 1; i <= 9; i++) {
     aes_enc_rnd_sub( m );
-    for (int x = 0; x < 16; x++) {
-      printf("%x, ", m[x]);
-    }
-    printf("\n");
     aes_enc_rnd_row( m );
-    aes_enc_keyexp_step ( rkp , rkp , RC[i-1] );
-    for (int x = 0; x < 16; x++) {
-      printf("%x, ", m[x]);
-    }
-    printf("\n");
     aes_enc_rnd_mix(m);
-        aes_enc_keyexp_step ( rkp , rkp , RC[i-1] );
-    for (int x = 0; x < 16; x++) {
-      printf("%x, ", m[x]);
-    }
-    printf("\n");
+    aes_enc_keyexp_step ( rkp , rkp , RC[i-1] );
+    aes_enc_rnd_key(m, rkp);
   }
-
+  aes_enc_rnd_sub( m );
+  aes_enc_rnd_row( m );
+  aes_enc_keyexp_step ( rkp , rkp , RC[9] );
+  aes_enc_rnd_key(m, rkp);
+  for (int x = 0; x < 16; x++) {
+    printf("%x, ", m[x]);
+  }
+  printf("\n");
 
   // if( !memcmp( t, c, 16 * sizeof( uint8_t ) ) ) {
   //   printf( "AES.Enc( k, m ) == c\n" );
