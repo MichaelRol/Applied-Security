@@ -20,6 +20,7 @@ void aes_enc_rnd_sub( aes_gf28_t* s );
 void aes_enc_rnd_row( aes_gf28_t* s );
 void aes_enc_rnd_mix( aes_gf28_t* s );
 
+
 int main( int argc, char* argv[] ) {
   aes_gf28_t k[ 16 ] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
                       0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
@@ -45,6 +46,12 @@ int main( int argc, char* argv[] ) {
     printf("\n");
     aes_enc_rnd_row( m );
     aes_enc_keyexp_step ( rkp , rkp , RC[i-1] );
+    for (int x = 0; x < 16; x++) {
+      printf("%x, ", m[x]);
+    }
+    printf("\n");
+    aes_enc_rnd_mix(m);
+        aes_enc_keyexp_step ( rkp , rkp , RC[i-1] );
     for (int x = 0; x < 16; x++) {
       printf("%x, ", m[x]);
     }
@@ -82,7 +89,16 @@ void aes_enc_rnd_row( aes_gf28_t* m ) {
 
 }
 
-void aes_enc_rnd_mix( aes_gf28_t* s ) {
+void aes_enc_rnd_mix( aes_gf28_t* m ) {
+   
+   aes_gf28_t s[16];
+   memcpy(s, m, 16);
+   for(int x = 0; x < 4; x++) {
+     m[x*4] = s[x*4 + 3] ^ s[x*4 + 2] ^ xtime(s[x*4]) ^ s[x*4 + 1] ^ xtime(s[x*4 + 1]);
+     m[x*4 + 1] = s[x*4 + 3] ^ s[x*4] ^ xtime(s[x*4 +  1]) ^ s[x*4 + 2] ^ xtime(s[x*4 + 2]);
+     m[x*4 + 2] = s[x*4] ^ s[x*4 + 1] ^ xtime(s[x*4 + 2]) ^ s[x*4 + 3] ^ xtime(s[x*4 + 3]);
+     m[x*4 + 3] = s[x*4 + 1]  ^ s[x*4 + 2] ^ xtime(s[x*4 + 3]) ^ s[x*4] ^ xtime(s[x*4]);
+   }
 
 }
 
