@@ -12,10 +12,7 @@ TARGETS_JAVA = $(patsubst %.java, %.class, ${SOURCES_JAVA})
 ${TARGETS_C}    : %       : %.c %.h
 	@gcc -Wall -std=gnu99 -O3 -o ${@} $(filter %.c, ${^}) -lgmp -lcrypto
 
-${TARGETS_JAVA} : %.class : %.java
-	@javac ${^}
-
-all   :             ${TARGETS_C} ${TARGETS_JAVA}
+all   :             ${TARGETS_C} 
 
 clean :
-	@rm -f core ${TARGETS_C} ${TARGETS_JAVA} *.pyo *.pyc
+	@rm -f core ${TARGETS_C}
