@@ -32,13 +32,13 @@ int main( int argc, char* argv[] ) {
   aes_enc(m, k, c);
 
   for (int x = 0; x < 16; x++) {
-    printf("%x, ", c[x]);
+    printf("0x%02x, ", c[x]);
   }
   printf("\n");
 
 }
 void aes_enc( aes_gf28_t* m, aes_gf28_t* k, aes_gf28_t* c ) {
-  
+
   aes_gf28_t* rkp = k;
 
   const aes_gf28_t RC[10] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36};
@@ -56,7 +56,7 @@ void aes_enc( aes_gf28_t* m, aes_gf28_t* k, aes_gf28_t* c ) {
   aes_enc_keyexp_step ( rkp , rkp , RC[9] );
   aes_enc_rnd_key(c, rkp);
 
-  
+
 }
 
 void aes_enc_rnd_row( aes_gf28_t* m ) {
@@ -81,7 +81,7 @@ void aes_enc_rnd_row( aes_gf28_t* m ) {
 }
 
 void aes_enc_rnd_mix( aes_gf28_t* m ) {
-   
+
    aes_gf28_t s[16];
    memcpy(s, m, 16);
    for(int x = 0; x < 4; x++) {
