@@ -6,28 +6,194 @@
  */
 
 #include "target.h" 
+uint8_t AsciiToHex(uint8_t char){
+  switch(char){
+    case '0': {
+      return 0x00;
+    }
+    case '1': {
+      return 0x01;
+    }
+    case '2': {
+      return 0x02;
+    }
+    case '3': {
+      return 0x03;
+    }
+    case '4': {
+      return 0x04;
+    }
+    case '5': {
+      return 0x05;
+    }
+    case '6': {
+      return 0x06;
+    }
+    case '7': {
+      return 0x07;
+    }
+    case '8': {
+      return 0x08;
+    }
+    case '9': {
+      return 0x09;
+    }
+    case 'A': {
+      return 0x0A;
+    }
+    case 'a': {
+      return 0x0A;
+    }
+    case 'B': {
+      return 0x0B;
+    }
+    case 'b': {
+      return 0x0B;
+    }
+    case 'C': {
+      return 0x0C;
+    }
+    case 'c': {
+      return 0x0C;
+    }
+    case 'D': {
+      return 0x0D;
+    }
+    case 'd': {
+      return 0x0D;
+    }
+    case 'E': {
+      return 0x0E;
+    }
+    case 'e': {
+      return 0x0E;
+    }
+    case 'F': {
+      return 0x0F;
+    }
+    case 'f': {
+      return 0x0F;
+    }
+    default: {
+      return 0x00;
+    }
+  }
+}
 
+uint8_t HexToAscii(uint8_t hex){
+  switch(hex){
+    case 0x00: {
+      return '0';
+    }
+    case 0x01: {
+      return '1';
+    }
+    case 0x02: {
+      return '2';
+    }
+    case 0x03: {
+      return '3';
+    }
+    case 0x04: {
+      return '4';
+    }
+    case 0x05: {
+      return '5';
+    }
+    case 0x06: {
+      return '6';
+    }
+    case 0x07: {
+      return '7';
+    }
+    case 0x08: {
+      return '8';
+    }
+    case 0x09: {
+      return '9';
+    }
+    case 0x0A: {
+      return 'A';
+    }
+    case 0x0B: {
+      return 'B';
+    }
+    case 0x0C: {
+      return 'C';
+    }
+    case 0x0D: {
+      return 'D';
+    }
+    case 0x0E: {
+      return 'E';
+    }
+    case 0x0F: {
+      return 'F';
+    }
+    default: {
+      return 'N';
+    }
+  }
+}
 /** Read  an octet string (or sequence of bytes) from the UART, using a simple
-  * length-prefixed, little-endian hexadecimal format.
-  * 
+  * len-prefixed, little-endian hexadecimal format.
+  *
   * \param[out] r the destination octet string read
   * \return       the number of octets read
   */
 
 int  octetstr_rd(       uint8_t* r, int n_r ) {
-  return 0;
+  uint8_t char1 =  scale_uart_rd( SCALE_UART_MODE_BLOCKING );
+  uint8_t char2 =  scale_uart_rd( SCALE_UART_MODE_BLOCKING );
+
+  uint8_t len = AsciiToHex(char1)<<4 ^ AsciiToHex(char2);
+  if(len > n_r) {
+    return -1;
+  }
+
+  //WORK OUT WHAT THIS IS
+  uint8_t colon =  scale_uart_rd( SCALE_UART_MODE_BLOCKING );
+  if(colon != 0x3A) {
+    return -1;
+  }
+
+  for(int i = 0; i < len; ++i){
+    uint8_t first =  scale_uart_rd( SCALE_UART_MODE_BLOCKING );
+    uint8_t second =  scale_uart_rd( SCALE_UART_MODE_BLOCKING );
+
+    r[i] = AsciiToHex(first) << 4 ^ AsciiToHex(second);
+  }
+  scale_uart_rd( SCALE_UART_MODE_BLOCKING );
+
+  return len;
 }
 
 /** Write an octet string (or sequence of bytes) to   the UART, using a simple
-  * length-prefixed, little-endian hexadecimal format.
-  * 
+  * len-prefixed, little-endian hexadecimal format.
+  *
   * \param[in]  r the source      octet string written
   * \param[in]  n the number of octets written
   */
 
 void octetstr_wr( const uint8_t* x, int n_x ) {
+  uint8_t len1 = HexToAscii((n_x >> 4) & 0x0F);
+  uint8_t len2 = HexToAscii(n_x & 0x0F);
+  scale_uart_wr( SCALE_UART_MODE_BLOCKING, len1 );
+  scale_uart_wr( SCALE_UART_MODE_BLOCKING, len2 );
+  scale_uart_wr(SCALE_UART_MODE_BLOCKING, 0x3A );
+
+  for(int i = 0; i<n_x; ++i){
+    uint8_t char1 = HexToAscii((x[i]>>4)&0x0F);
+    uint8_t char2 = HexToAscii(x[i]&0x0F);
+    scale_uart_wr( SCALE_UART_MODE_BLOCKING, char1 );
+    scale_uart_wr( SCALE_UART_MODE_BLOCKING, char2 );
+  }
+  scale_uart_wr( SCALE_UART_MODE_BLOCKING, 0x0D );
+  scale_uart_wr( SCALE_UART_MODE_BLOCKING, 0x0A );
+
   return;
 }
+
 
 /** Initialise an AES-128 encryption, e.g., expand the cipher key k into round
   * keys, or perform randomised pre-computation in support of a countermeasure;
